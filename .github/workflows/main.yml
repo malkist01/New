@@ -34,9 +34,9 @@ jobs:
             gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
             gcc-arm-linux-gnueabihf python3 aria2 cpio
 
-      - name: Downloading Geopelia-clang-20
+      - name: Downloading aosp-clang-21
         run: |
-          wget https://github.com/fukiame/tc_builds/releases/download/Geopelia-Clang-20.1.8/Geopelia-Clang-20.1.8.tar.gz -O clang.tar.gz
+          wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/4d2864f08ff2c290563fb903a5156e0504620bbe/clang-r563880c.tar.gz -O clang.tar.gz
           mkdir -p clang && tar -xf clang.tar.gz -C clang
 
       # 4. Set environment variables
