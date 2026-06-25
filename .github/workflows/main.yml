@@ -1,0 +1,94 @@
+name: Build Kernel
+
+on:
+  workflow_dispatch:
+    inputs:
+      config:
+          description: 'kernel config target'
+          required: true
+          default: 'ginkgo_defconfig'
+      kernelname:
+          description: 'Kernel name'
+          required: true
+          default: 'Teletubies-KSUN-Susfs-Ginkgo'
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      TZ: Asia/Jakarta
+      CONFIG: ${{ github.event.inputs.config }}
+      KERNELNAME: ${{ github.event.inputs.kernelname }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            bc bison flex libssl-dev build-essential \
+            gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
+            gcc-arm-linux-gnueabihf python3 aria2 cpio
+
+      - name: Downloading Geopelia-clang-20
+        run: |
+          wget https://github.com/fukiame/tc_builds/releases/download/Geopelia-Clang-20.1.8/Geopelia-Clang-20.1.8.tar.gz -O clang.tar.gz
+          mkdir -p clang && tar -xf clang.tar.gz -C clang
+
+      # 4. Set environment variables
+      - name: Export build vars
+        run: |
+          export KERNEL_DIR=$PWD
+          export CLANG_PATH=$PWD/clang/bin
+          echo "PATH=$CLANG_PATH:/usr/bin:$PATH" >> $GITHUB_ENV
+          echo "KERNEL_DIR=$KERNEL_DIR" >> $GITHUB_ENV
+
+      - name: Start kernel build
+        run: |
+          export PATH="$PATH"
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export CLANG_TRIPLE=aarch64-linux-gnu-
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export CROSS_COMPILE_ARM32=arm-linux-gnueabi-          
+          export CC=clang
+          export LD=ld.lld
+          export NM=llvm-nm
+          export AR=llvm-ar
+          export STRIP=llvm-strip
+          export OBJCOPY=llvm-objcopy
+          export OBJDUMP=llvm-objdump
+          export READELF=llvm-readelf
+          export HOSTCC=clang
+          export HOSTCXX=clang++
+          export HOSTLD=ld.lld
+          export HOSTAR=llvm-ar
+          export LLVM=1
+          export LLVM_IAS=1
+          export KBUILD_BUILD_USER=malkist
+          export KBUILD_BUILD_HOST=android
+
+          mkdir -p out
+          make O=out vendor/$CONFIG
+          make -j$(nproc --all) O=out \
+
+      - name: Clone AnyKernel3
+        run: |
+          git clone -b ginkgo https://github.com/malkist01/Anykernel3 AnyKernel
+          cp out/arch/arm64/boot/Image.gz-dtb AnyKernel/
+          cp out/arch/arm64/boot/dtbo.img AnyKernel/
+
+      - name: Zip kernel
+        run: |
+          cd AnyKernel
+          zip -r9 Kernel-$KERNELNAME-$(date +%Y%m%d).zip ./*
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kernel-${{ env.KERNELNAME }}
+          path: AnyKernel/*.zip
