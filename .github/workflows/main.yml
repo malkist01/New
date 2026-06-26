@@ -22,7 +22,7 @@ on:
         default: 'vendor/ginkgo_defconfig'
       clang_url:
         description: 'Clang | false for disable'
-        required: false
+        required: true
         default: 'https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/9b144befdfd93b90e02c663504fb9f4b95f9faf8/clang-r596125.tar.gz'
       tweak_pre_build_cmd:
         description: 'Tweak Pre Build'
