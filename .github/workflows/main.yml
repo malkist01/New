@@ -1,140 +1,226 @@
-name: Limitless Compiler v2.2
-# linex Project
-
+# Annoy Project
+name: mido-10
 on:
   workflow_dispatch:
     inputs:
-      zip_name:
-        description: 'Zip Name'
+      ubuntu:
+        description: 'Run on'
+        default: 'ubuntu-latest'
         required: true
-        default: '4.14-Teletubies'
-      kernel_source:
-        description: 'Kernel Source'
+        type: string
+      name:
+        description: 'Name'
+        default: '4.14.357-Ginkgo'
         required: true
-        default: 'https://github.com/malkist01/New.git'
-      kernel_branch:
-        description: 'Kernel Branch'
+        type: string
+      compiler:
+        description: 'Compiler | gcc|clang|llvm'
+        default: 'clang'
         required: true
-        default: 'main'
-      defconfig:
-        description: 'defconfig'
-        required: true
-        default: 'vendor/ginkgo_defconfig'
-      clang_url:
+        type: string
+      aosp-clang:
         description: 'Clang | false for disable'
+        default: '16'
         required: true
-        default: 'https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/4d2864f08ff2c290563fb903a5156e0504620bbe/clang-r563880c.tar.gz'
-      tweak_pre_build_cmd:
-        description: 'Tweak Pre Build'
-        required: false
-        default: 'echo "Starting kernel compilation! $(date)"'
-      tweak_after_build_cmd:
-        description: 'Tweak After Build'
-        required: false
-        default: 'echo "Compilation completed! $(date)"'
-
+        type: string
+      kernel-url:
+        description: 'Kernel-url'
+        default: 'https://github.com/malkist01/New.git'
+        required: true
+        type: string
+      kernel-branch:
+        description: 'Kernel-branch'
+        default: 'main'
+        required: true
+        type: string
+      kernel-config:
+        description: 'Kernel-config'
+        default: 'vendor/ginkgo_defconfig'
+        required: true
+        type: string
+      disable-lto:
+        description: 'Disable LTO'
+        default: 'true'
+        required: true
+        type: string
+      AK3:
+        description: 'AnyKernel3'
+        default: 'https://github.com/malkist01/AnyKernel3.git'
+        required: true
+        type: string
 jobs:
-  teletubies-compiler:
-    name: ${{ github.event.inputs.zip_name }}
-    runs-on: ubuntu-latest
+  linext-24:
+    runs-on: ${{ inputs.ubuntu }}
     steps:
-      - name: Check Input
-        run: |
-          sudo timedatectl set-timezone Asia/Jakarta
-          echo "zip_name: ${{ github.event.inputs.zip_name }}"
-          echo "kernel_source: ${{ github.event.inputs.kernel_source }}"
-          echo "kernel_branch: ${{ github.event.inputs.kernel_branch }}"
-          echo "defconfig: ${{ github.event.inputs.defconfig }}"
-          echo "clang_url: ${{ github.event.inputs.clang_url }}"
-          
-      - name: Install Build Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            bc build-essential flex bison ca-certificates clang lld llvm \
-            libssl-dev libelf-dev cpio curl git unzip wget \
-            gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
-            g++-aarch64-linux-gnu g++-arm-linux-gnueabi \
-            libncurses5-dev libncursesw5-dev
-
-      - name: Setup Custom Clang Environment
-        run: |
-          if [ "${{ github.event.inputs.clang_url }}" == "ThRE" ]; then
-            echo "Mengunduh ThRE Weave Clang..."
-            mkdir -p ~/clang-ext
-            curl -Lo clang.tar.gz "${{ secrets.THRE_CLANG }}"
-            tar -xzf clang.tar.gz -C ~/clang-ext
-          elif [ "${{ github.event.inputs.clang_url }}" != "false" ]; then
-            echo "Mengunduh Clang Kustom dari input..."
-            mkdir -p ~/clang-ext
-            curl -Lo clang.tar.gz "${{ github.event.inputs.clang_url }}"
-            tar -xzf clang.tar.gz -C ~/clang-ext
-          else
-            echo "Menggunakan Clang bawaan sistem Ubuntu..."
+    - name: Checkin
+      run: |
+         echo "name: ${{ inputs.name }}"
+         echo "compiler: ${{ inputs.compiler }}"
+         echo "aosp-clang: ${{ inputs.aosp-clang }}"
+         if [ ${{ inputs.kernel-url }} != false ]; then
+            echo "kernel-url: ${{ inputs.kernel-url }}"
+            echo "kernel-branch: ${{ inputs.kernel-branch }}"
+         fi
+         if [ ${{ inputs.kernel-url }} == false ]; then
+            echo "kernel-url: use current repo"
+            sudo timedatectl set-timezone Asia/Jakarta
+            if [ ${{ inputs.kernel-branch }} != main ]; then
+               echo "custom-sc: ${{ inputs.kernel-branch }}"
+            fi
+            if [ ${{ inputs.kernel-branch }} == main ]; then
+               echo "custom-sc: disable"
+            fi
+         fi
+         echo "kernel-config: ${{ inputs.kernel-config }}"
+         echo "kernelsu: ${{ inputs.kernelsu }}"
+         echo "disable-lto: ${{ inputs.disable-lto }}"
+         echo "Teletubies Project"
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Setup Packages
+      run: |
+         sudo timedatectl set-timezone Asia/Jakarta
+         sudo apt update -y
+         sudo apt-get install --no-install-recommends -y gcc-arm-linux-gnueabi gcc-aarch64-linux-gnu lld llvm g++-aarch64-linux-gnu
+         aria2c -q https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh && NONINTERACTIVE=1 bash ./uninstall.sh -f -q
+         if [ -f /bin/swapon ]; then
+             export SWAP_FILE=$(swapon --show=NAME | tail -n 1)
+             sudo swapoff $SWAP_FILE
+             sudo rm $SWAP_FILE
+             sudo fallocate -l 16G $SWAP_FILE
+             sudo chmod 600 $SWAP_FILE
+             sudo mkswap $SWAP_FILE
+             sudo swapon $SWAP_FILE
+             unset SWAP_FILE
+         fi
+    - name: Setup GCC
+      run: |
+         if [ ${{ inputs.aosp-clang }} == false ]; then
+            echo "aosp-clang disable"
+         else
+            mkdir -p -v $HOME/gcc-64
+            aria2c -o gcc-aarch64.tar.gz https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/0a0604336d4d1067aa1aaef8d3779b31fcee841d.tar.gz
+            tar -C $HOME/gcc-64 -zxf gcc-aarch64.tar.gz
+            mkdir -p -v $HOME/gcc-32
+            aria2c -o gcc-arm.tar.gz https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/+archive/4d16d93f49c2b5ecdd0f12c38d194835dd595603.tar.gz
+            tar -C $HOME/gcc-32 -zxf gcc-arm.tar.gz
+         fi
+    - name: Setup Clang
+      run: |
+         if [ ${{ inputs.aosp-clang }} == false ]; then
+            echo "aosp-clang disable"
+         else
+            if [ ${{ inputs.aosp-clang }} == "10" ]; then
+                aria2c -o aosp-clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/llvm-r399163b/clang-r399163.tar.gz
+            elif [ ${{ inputs.aosp-clang }} == "11" ]; then
+                aria2c -o aosp-clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/llvm-r416183/clang-r399163b.tar.gz
+            elif [ ${{ inputs.aosp-clang }} == "12" ]; then
+                aria2c -o aosp-clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/llvm-r416183/clang-r416183.tar.gz
+            elif [ ${{ inputs.aosp-clang }} == "13" ]; then
+                aria2c -o aosp-clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android13-release/clang-r450784d.tar.gz
+            elif [ ${{ inputs.aosp-clang }} == "14" ]; then
+                aria2c -o aosp-clang.tar.gz https://github.com/ZyCromerZ/Clang/releases/download/14.0.6-20250704-release/Clang-14.0.6-20250704.tar.gz
+            elif [ ${{ inputs.aosp-clang }} == "15" ]; then
+                aria2c -o aosp-clang.tar.gz https://github.com/ZyCromerZ/Clang/releases/download/15.0.7-20260507-release/Clang-15.0.7-20260507.tar.gz
+            elif [ ${{ inputs.aosp-clang }} == "16" ]; then
+                aria2c -o aosp-clang.tar.gz https://github.com/ZyCromerZ/Clang/releases/download/16.0.6-20260510-release/Clang-16.0.6-20260510.tar.gz
+            elif [ ${{ inputs.aosp-clang }} == "17" ]; then
+                aria2c -o aosp-clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android14-release/clang-r487747c.tar.gz
+            elif [ ${{ inputs.aosp-clang }} == "18" ]; then
+                aria2c -o aosp-clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r522817.tar.gz
+            elif [ ${{ inputs.aosp-clang }} == "19" ]; then
+                aria2c -o aosp-clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r530567.tar.gz
+            elif [ ${{ inputs.aosp-clang }} == "20" ]; then
+                aria2c -o aosp-clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r547379.tar.gz          
+            elif [ ${{ inputs.aosp-clang }} == "21" ]; then
+                aria2c -o aosp-clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/4d2864f08ff2c290563fb903a5156e0504620bbe/clang-r563880c.tar.gz         
+            elif [ ${{ inputs.aosp-clang }} == "22" ]; then
+                aria2c -o aosp-clang.tar.gz https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/105aba85d97a53d364585ca755752dae054b49e8/clang-r584948b.tar.gz
+            elif [ ${{ inputs.aosp-clang }} != false ]; then
+                aria2c -o aosp-clang.tar.gz ${{ inputs.aosp-clang }}
+            fi
+            mkdir $HOME/clang -p -v
+            tar -C $HOME/clang -zxf aosp-clang.tar.gz
+         fi
+    - name: Setup Kernel
+      run: |
+         if [ ${{ inputs.kernel-url }} != false ]; then
+            git clone --depth=1 ${{ inputs.kernel-url }} -b ${{ inputs.kernel-branch }} kernel-dir
+         else
+            if [ ${{ inputs.kernel-branch }} != main ]; then
+               ${{ inputs.kernel-branch }}
+            else
+               echo "custom-sc: disable"
+            fi
+            ls
+         fi
+    - name: LTO
+      run: |
+         if [ ${{ inputs.kernel-url }} != false ]; then
+            cd kernel-dir
+         fi
+         if [ ${{ inputs.disable-lto }} = true ]; then
+             if grep -q "LTO" "arch/arm64/configs/${{ inputs.kernel-config }}"
+             then
+                  sed -i 's/CONFIG_LTO=y/CONFIG_LTO=n/' arch/arm64/configs/${{ inputs.kernel-config }} 
+                  sed -i 's/CONFIG_LTO_CLANG=y/CONFIG_LTO_CLANG=n/' arch/arm64/configs/${{ inputs.kernel-config }} 
+                  sed -i 's/CONFIG_THINLTO=y/CONFIG_THINLTO=n/' arch/arm64/configs/${{ inputs.kernel-config }} 
+                  echo "CONFIG_LTO_NONE=y" | tee -a arch/arm64/configs/${{ inputs.kernel-config }} >/dev/null
+             fi
+         fi
+    - name: Compile
+      run: |        
+         mkdir -p -v out
+         if [ ${{ inputs.kernel-url }} != false ]; then
+            cd kernel-dir
+            COMMAND="make -j$(nproc --all) ${{ inputs.kernel-config }} ARCH=arm64 O=../out all"
+         fi
+         if [ ${{ inputs.kernel-url }} == false ]; then
+            COMMAND="make -j$(nproc --all) ${{ inputs.kernel-config }} ARCH=arm64 O=out all"
+         fi
+         if [ ${{ inputs.aosp-clang }} == false ]; then
+            echo "aosp-clang disable"
+         else
+            export PATH=$HOME/clang/bin:$HOME/gcc-64/bin:$HOME/gcc-32/bin:$PATH
+         fi
+         export KBUILD_BUILD_USER="dark"
+         export KBUILD_BUILD_HOST="side"
+         if [ ${{ inputs.compiler }} == gcc ]; then
+            COMMAND+=" CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi-"
+         elif [ ${{ inputs.compiler }} == clang ] && [ ${{ inputs.aosp-clang }} == false ]; then
+            COMMAND+=" CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi- CC=clang"
+         elif [ ${{ inputs.compiler }} == clang ] && [ ${{ inputs.aosp-clang }} != false ]; then
+            COMMAND+=" CROSS_COMPILE=aarch64-linux-android- CROSS_COMPILE_ARM32=arm-linux-androideabi- CLANG_TRIPLE=aarch64-linux-gnu- CC=clang"
+         elif [ ${{ inputs.compiler }} == llvm ] && [ ${{ inputs.aosp-clang }} == false ]; then
+            COMMAND+=" CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi- CC=clang LLVM=1 LLVM_IAS=0 AR=llvm-ar NM=llvm-nm STRIP=llvm-strip OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++ HOSTAR=llvm-ar"
+         elif [ ${{ inputs.compiler }} == llvm ] && [ ${{ inputs.aosp-clang }} != false ]; then
+            COMMAND+=" CROSS_COMPILE=aarch64-linux-android- CROSS_COMPILE_ARM32=arm-linux-androideabi- CLANG_TRIPLE=aarch64-linux-gnu- CC=clang LLVM=1 LLVM_IAS=0 AR=llvm-ar NM=llvm-nm STRIP=llvm-strip OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++ HOSTAR=llvm-ar"
+         fi
+         ${COMMAND}
+    - name: AnyKernel3
+      run: |
+          git clone -b ginkgo ${{ inputs.AK3 }} AnyKernel3
+          rm -rf AnyKernel3/.git AnyKernel3/.github AnyKernel3/LICENSE AnyKernel3/README.md AnyKernel3/modules AnyKernel3/patch AnyKernel3/ramdisk
+          if [[ -f out/arch/arm64/boot/Image.gz-dtb ]]; then
+            cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3/Image.gz-dtb
+          elif [[ -f out/arch/arm64/boot/Image-dtb ]]; then
+            cp out/arch/arm64/boot/Image-dtb AnyKernel3/Image-dtb
+          elif [[ -f out/arch/arm64/boot/Image.gz ]]; then
+            cp out/arch/arm64/boot/Image.gz AnyKernel3/Image.gz
+          elif [[ -f out/arch/arm64/boot/Image ]]; then
+            cp out/arch/arm64/boot/Image AnyKernel3/Image
           fi
-
-      - name: Clone Kernel Source
-        run: |
-          git clone --depth=1 "${{ github.event.inputs.kernel_source }}" -b "${{ github.event.inputs.kernel_branch }}" kernel-src
-
-      - name: Compile Kernel
-        env:
-          KBUILD_BUILD_USER: "malkist"
-          KBUILD_BUILD_HOST: "android"
-        run: |
-          cd kernel-src
-          
-          OUT_DIR="out"
-          
-          if [ "${{ github.event.inputs.clang_url }}" != "false" ]; then
-            export PATH="$HOME/clang-ext/bin:$PATH"
+          if [ -f out/arch/arm64/boot/dtbo.img ]; then
+            cp out/arch/arm64/boot/dtbo.img AnyKernel3/dtbo.img
           fi
-          
-          MAKE_ARGS=(
-            O=$OUT_DIR
-            ARCH=arm64
-            CC=clang
-            LD=ld.lld
-            AR=llvm-ar
-            NM=llvm-nm
-            OBJCOPY=llvm-objcopy
-            OBJDUMP=llvm-objdump
-            STRIP=llvm-strip
-            READELF=llvm-readelf
-            CLANG_TRIPLE=aarch64-linux-gnu-
-            CROSS_COMPILE=aarch64-linux-gnu-
-            CROSS_COMPILE_ARM32=arm-linux-gnueabi-
-            LLVM=1
-            LLVM_IAS=1
-          )
-          
-          mkdir -p $OUT_DIR
-          
-          make "${MAKE_ARGS[@]}" ${{ github.event.inputs.defconfig }}
-          
-          ${{ github.event.inputs.tweak_pre_build_cmd }}
-          
-          ${{ secrets.TWEAK_PRE_BUILD_CMD }}
-          
-          make "${MAKE_ARGS[@]}" olddefconfig
-          
-          ${{ secrets.LIMITLESS_ADDON }}
-          
-          make -j$(nproc --all) "${MAKE_ARGS[@]}" KCFLAGS="$K_FLAGS" EXTRA_CFLAGS="$K_FLAGS"
-          
-          ${{ github.event.inputs.tweak_after_build_cmd }}
-          ${{ secrets.TWEAK_AFTER_BUILD_CMD }}
-          
-      - name: Upload Image.gz-dtb
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ github.event.inputs.zip_name }}-gz-dtb
-          path: kernel-src/out/arch/arm64/boot/Image.gz-dtb
-          if-no-files-found: ignore
-          
-      - name: Upload Image Only
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ github.event.inputs.zip_name }}-raw
-          path: kernel-src/out/arch/arm64/boot/Image
-          if-no-files-found: ignore
+    - name: Upload
+      run: |
+          mkdir Upload
+          cp -rf AnyKernel3/* Upload
+    - id: Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: "${{ inputs.name }}"
+        path: Upload/*
+        
+# Enjoy Your Life....
