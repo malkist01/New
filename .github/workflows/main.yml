@@ -46,8 +46,6 @@ jobs:
           echo "kernel_branch: ${{ github.event.inputs.kernel_branch }}"
           echo "defconfig: ${{ github.event.inputs.defconfig }}"
           echo "clang_url: ${{ github.event.inputs.clang_url }}"
-          echo "tweak_pre_build_cmd: ${{ github.event.inputs.tweak_pre_build_cmd }}"
-          echo "tweak_after_build_cmd: ${{ github.event.inputs.tweak_after_build_cmd }}"
           
       - name: Install Build Dependencies
         run: |
@@ -87,7 +85,6 @@ jobs:
           cd kernel-src
           
           OUT_DIR="out"
-          K_FLAGS="-fcommon -Qunused-arguments -Wno-everything"
           
           if [ "${{ github.event.inputs.clang_url }}" != "false" ]; then
             export PATH="$HOME/clang-ext/bin:$PATH"
