@@ -1,5 +1,5 @@
-# Annoy Project
-name: mido-10
+# Teletubies Project
+name: Ginkgo
 on:
   workflow_dispatch:
     inputs:
@@ -20,7 +20,7 @@ on:
         type: string
       aosp-clang:
         description: 'Clang | false for disable'
-        default: '16'
+        default: '21'
         required: true
         type: string
       kernel-url:
