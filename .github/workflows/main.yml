@@ -165,7 +165,7 @@ jobs:
                   echo -e "\nCleanup KernelSU first on local build\n"
                   rm -rf KernelSU drivers/kernelsu
                   echo -e "\nKSU Support, let's Make it On\n"
-                  curl -kLSs "https://raw.githubusercontent.com/Frenzy169/KernelSU-Next/legacy-susfs/kernel/setup.sh" | bash -s legacy-susfs
+                  curl -kLSs "https://raw.githubusercontent.com/malkist01/KernelSU-Next/legacy-susfs/kernel/setup.sh" | bash -s legacy-susfs
                   sed -i 's/CONFIG_KSU=n/CONFIG_KSU=y/g' arch/arm64/configs/${{ inputs.kernel-config }}
                   sed -i 's/CONFIG_KSU_MANUAL_HOOK=n/CONFIG_KSU_MANUAL_HOOK=y/g' arch/arm64/configs/${{ inputs.kernel-config }}
                   sed -i 's/CONFIG_LTO=y/CONFIG_LTO=n/' arch/arm64/configs/${{ inputs.kernel-config }} 
