@@ -49,7 +49,7 @@ on:
         required: true
         type: string
 jobs:
-  linext-24:
+  teletubies:
     runs-on: ${{ inputs.ubuntu }}
     steps:
     - name: Checkin
@@ -80,8 +80,22 @@ jobs:
     - name: Setup Packages
       run: |
          sudo timedatectl set-timezone Asia/Jakarta
-         sudo apt update -y
-         sudo apt-get install --no-install-recommends -y gcc-arm-linux-gnueabi gcc-aarch64-linux-gnu lld llvm g++-aarch64-linux-gnu
+         sudo apt-get update -qq
+         sudo apt-get install -y --no-install-recommends \
+            git curl wget \
+            build-essential gcc make \
+            bc bison flex \
+            libssl-dev libelf-dev \
+            libncurses5-dev \
+            python3 \
+            zip unzip \
+            cpio \
+            ccache \
+            binutils-aarch64-linux-gnu \
+            binutils-arm-linux-gnueabihf \
+            lld \
+            rsync \
+            clang
          aria2c -q https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh && NONINTERACTIVE=1 bash ./uninstall.sh -f -q
          if [ -f /bin/swapon ]; then
              export SWAP_FILE=$(swapon --show=NAME | tail -n 1)
@@ -164,9 +178,6 @@ jobs:
                   rm -rf KernelSU drivers/kernelsu
                   echo -e "\nKSU Support, let's Make it On\n"
                   curl -kLSs "https://raw.githubusercontent.com/sidex15/KernelSU-Next/legacy-susfs-v2/kernel/setup.sh" | bash -s legacy-susfs-v2
-                  sed -i 's/CONFIG_KPM=n/CONFIG_KPM=y/g' arch/arm64/configs/${{ inputs.kernel-config }}
-                  sed -i 's/CONFIG_KSU=n/CONFIG_KSU=y/g' arch/arm64/configs/${{ inputs.kernel-config }}
-                  sed -i 's/CONFIG_KSU_MANUAL_HOOK=n/CONFIG_KSU_MANUAL_HOOK=y/g' arch/arm64/configs/${{ inputs.kernel-config }}
                   sed -i 's/CONFIG_LTO=y/CONFIG_LTO=n/' arch/arm64/configs/${{ inputs.kernel-config }} 
                   sed -i 's/CONFIG_LTO_CLANG=y/CONFIG_LTO_CLANG=n/' arch/arm64/configs/${{ inputs.kernel-config }} 
                   sed -i 's/CONFIG_THINLTO=y/CONFIG_THINLTO=n/' arch/arm64/configs/${{ inputs.kernel-config }} 
