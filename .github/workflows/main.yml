@@ -173,10 +173,6 @@ jobs:
          if [ ${{ inputs.disable-lto }} = true ]; then
              if grep -q "LTO" "arch/arm64/configs/${{ inputs.kernel-config }}"
              then
-                  echo -e "\nCleanup KernelSU first on local build\n"
-                  rm -rf KernelSU drivers/kernelsu
-                  echo -e "\nKSU Support, let's Make it On\n"
-                  curl -LSs https://raw.githubusercontent.com/sidex15/KernelSU-Next/legacy-susfs-v2/kernel/setup.sh | bash -s legacy-susfs-v2
                   sed -i 's/CONFIG_LTO=y/CONFIG_LTO=n/' arch/arm64/configs/${{ inputs.kernel-config }} 
                   sed -i 's/CONFIG_LTO_CLANG=y/CONFIG_LTO_CLANG=n/' arch/arm64/configs/${{ inputs.kernel-config }} 
                   sed -i 's/CONFIG_THINLTO=y/CONFIG_THINLTO=n/' arch/arm64/configs/${{ inputs.kernel-config }} 
