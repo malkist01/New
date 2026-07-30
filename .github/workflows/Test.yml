@@ -29,7 +29,7 @@ jobs:
         uses: m-s-abeer/update-gha-summary-with-workflow-inputs@v1
 
       - name: Build
-        uses: frstprjkt/kernel_actions@main
+        uses: malkist01/kernel_actions@main
         with:
           kernel-url: https://github.com/malkist01/New
           kernel-branch: ${{ github.event.inputs.kernel-branch }}
@@ -44,7 +44,7 @@ jobs:
 
           aosp-gcc: true
           aosp-clang: true
-          aosp-clang-version: r563880c
+          aosp-clang-version: r547379
 
           anykernel3: true
           anykernel3-url: https://github.com/malkist01/AnyKernel3
