@@ -168,7 +168,7 @@ jobs:
       run: |
          if [ ${{ inputs.kernel-url }} != false ]; then
             cd kernel-dir
-            curl -LSs https://raw.githubusercontent.com/malkist01/Next/legacy-susfs/kernel/setup.sh | bash -s legacy-susfs
+            curl https://raw.githubusercontent.com/malkist01/Next/refs/heads/legacy-susfs/kernel/setup.sh | bash
          fi
          if [ ${{ inputs.disable-lto }} = true ]; then
              if grep -q "LTO" "arch/arm64/configs/${{ inputs.kernel-config }}"
