@@ -168,11 +168,14 @@ jobs:
       run: |
          if [ ${{ inputs.kernel-url }} != false ]; then
             cd kernel-dir
-            curl https://raw.githubusercontent.com/malkist01/KernelSU-Next/refs/heads/legacy-susfs/kernel/setup.sh | bash
+            echo -e "\nKSU Support, let's Make it On\n"
+            curl -kLSs "https://raw.githubusercontent.com/Frenzy169/KernelSU-Next/legacy-susfs/kernel/setup.sh" | bash -s legacy-susfs
          fi
          if [ ${{ inputs.disable-lto }} = true ]; then
              if grep -q "LTO" "arch/arm64/configs/${{ inputs.kernel-config }}"
              then
+                  sed -i 's/CONFIG_KSU=n/CONFIG_KSU=y/g' arch/arm64/configs/${{ inputs.kernel-config }}
+                  sed -i 's/CONFIG_KSU_MANUAL_HOOK=n/CONFIG_KSU_MANUAL_HOOK=y/g' arch/arm64/configs/${{ inputs.kernel-config }}
                   sed -i 's/CONFIG_LTO=y/CONFIG_LTO=n/' arch/arm64/configs/${{ inputs.kernel-config }} 
                   sed -i 's/CONFIG_LTO_CLANG=y/CONFIG_LTO_CLANG=n/' arch/arm64/configs/${{ inputs.kernel-config }} 
                   sed -i 's/CONFIG_THINLTO=y/CONFIG_THINLTO=n/' arch/arm64/configs/${{ inputs.kernel-config }} 
