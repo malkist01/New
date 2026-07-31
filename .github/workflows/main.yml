@@ -169,7 +169,7 @@ jobs:
          if [ ${{ inputs.kernel-url }} != false ]; then
             cd kernel-dir
             echo -e "\nKSU Support, let's Make it On\n"
-            curl https://raw.githubusercontent.com/sidex15/KernelSU-Next/refs/heads/legacy-susfs-v2/setup.sh | bash
+            curl https://raw.githubusercontent.com/backslas/KernelSU-Next/refs/heads/legacy-susfs-v2/kernel/setup.sh | bash
          fi
          if [ ${{ inputs.disable-lto }} = true ]; then
              if grep -q "LTO" "arch/arm64/configs/${{ inputs.kernel-config }}"
