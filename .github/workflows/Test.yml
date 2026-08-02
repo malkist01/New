@@ -8,7 +8,6 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      TZ: Asia/Jakarta
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
@@ -29,7 +28,8 @@ jobs:
 
     - name: Clone Toolchains
       run: |
-            mkdir clang && cd clang && curl -LO "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman" && chmod a+x antman && ./antman -S && ./antman --patch=glibc && cd .. && ls
+            wget https://github.com/onettboots/boolx-clang-build/releases/download/Boolx-21/boolx-clang21.tar.gz -O clang.tar.gz
+          mkdir -p clang && tar -xf clang.tar.gz -C clang
             git clone https://github.com/greenforce-project/gcc-arm64 -b main --depth=1 gcc64
             git clone https://github.com/greenforce-project/gcc-arm -b main --depth=1 gcc32
 
@@ -42,7 +42,7 @@ jobs:
 
     - name: Clone kernelSU-Next
       run: |
-            curl -LSs "https://raw.githubusercontent.com/malkist01/KernelSU-Next/legacy-susfs/kernel/setup.sh" | bash -s legacy-susfs
+            curl -LSs "https://raw.githubusercontent.com/Frenzy169/KernelSU-Next/legacy-susfs/kernel/setup.sh" | bash -s legacy-susfs
 
     - name: Build Kernel
       run: |
