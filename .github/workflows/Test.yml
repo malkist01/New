@@ -29,7 +29,7 @@ jobs:
     - name: Clone Toolchains
       run: |
             wget https://github.com/onettboots/boolx-clang-build/releases/download/Boolx-21/boolx-clang21.tar.gz -O clang.tar.gz
-          mkdir -p clang && tar -xf clang.tar.gz -C clang
+            mkdir -p clang && tar -xf clang.tar.gz -C clang
             git clone https://github.com/greenforce-project/gcc-arm64 -b main --depth=1 gcc64
             git clone https://github.com/greenforce-project/gcc-arm -b main --depth=1 gcc32
 
