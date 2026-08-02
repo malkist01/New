@@ -66,7 +66,7 @@ jobs:
 
     - name: Clone Anykernel3
       run: |
-            git clone -b ginkgo --depth=1 https://github.com/malkist01/anykernel 3AnyKernel3
+            git clone -b ginkgo --depth=1 https://github.com/malkist01/anykernel3 AnyKernel3
             cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3/Image.gz-dtb
             cp out/arch/arm64/boot/dtbo.img AnyKernel3/dtbo.img
             cd AnyKernel3
