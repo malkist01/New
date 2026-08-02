@@ -42,7 +42,7 @@ jobs:
 
     - name: Clone kernelSU-Next
       run: |
-            curl -LSs "https://raw.githubusercontent.com/Frenzy169/KernelSU-Next/legacy-susfs/kernel/setup.sh" | bash -s legacy-susfs
+            curl -LSs "https://raw.githubusercontent.com/malkist01/Next/legacy-susfs/kernel/setup.sh" | bash -s legacy-susfs
 
     - name: Build Kernel
       run: |
