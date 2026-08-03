@@ -7,10 +7,6 @@ jobs:
     name: Build Kernel
     runs-on: ubuntu-latest
 
-    env:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
@@ -77,11 +73,3 @@ jobs:
       with:
         name: TobrutExotic-AOSP-${{ env.BUILD_TIME }}
         path: AnyKernel3/*
-
-    - name: Send to Telegram
-      run: |
-          curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument" \
-          -F chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
-          -F message_thread_id=120979 \
-          -F document=@"TobrutExotic-AOSP-${{ env.BUILD_TIME }}.zip" \
-          -F caption=" Last Version is Cumming "
