@@ -54,12 +54,6 @@ jobs:
               CROSS_COMPILE_ARM32=$GCC32_PATH/bin/arm-linux-gnueabi-         
             mv out/.config out/ginkgo_defconfig.txt
 
-    - name: Upload configs
-      uses: actions/upload-artifact@v4
-      with:
-        name: configs-${{ env.BUILD_TIME }}
-        path: out/ginkgo_defconfig.txt
-
     - name: Clone Anykernel3
       run: |
             git clone -b ginkgo --depth=1 https://github.com/malkist01/anykernel3 AnyKernel3
